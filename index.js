@@ -4,6 +4,8 @@ require('dotenv').config();
 // Import the discord.js module
 const { Client, GatewayIntentBits, PermissionsBitField } = require('discord.js');
 const { sendImageAndEmbed } = require('./embed/rules'); // Import the sendImageAndEmbed function
+const fs = require('fs');
+
 
 // Create a new Discord client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
@@ -111,6 +113,92 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply({ content: 'There was an error assigning the role.', ephemeral: true });
         }
     }
+});
+
+// Load game data from JSON file
+let gamesData;
+try {
+  gamesData = require('./embed/games.json');
+} catch (err) {
+  console.error('Error loading games data:', err);
+  gamesData = { games: [] };
+}
+
+// Save game data to JSON file
+function saveGamesData() {
+  fs.writeFileSync('./embed/games.json', JSON.stringify(gamesData, null, 2));
+}
+
+// ... your command handler setup
+
+client.application.commands.create({
+  name: 'fith',
+  description: 'Fith bot commands',
+  options: [
+    {
+      name: 'addgame',
+      description: 'Add a game role',
+      type: ApplicationCommandOptionType.Subcommand,
+      options: [
+        { name: 'game', type: ApplicationCommandOptionType.String, required: true },
+        { name: 'role', type: ApplicationCommandOptionType.Role, required: true },
+        { name: 'emoji', type: ApplicationCommandOptionType.String, required: true }
+      ]
+    },
+    {
+      name: 'removegame',
+      description: 'Remove a game role',
+      type: ApplicationCommandOptionType.Subcommand,
+      options: [
+        { name: 'game', type: ApplicationCommandOptionType.String, required: true }
+      ]
+    }
+  ]
+});
+
+client.on('interactionCreate', async interaction => {
+  // ... existing button interaction handler
+
+  if (!interaction.isCommand()) return;
+
+  const { commandName, options } = interaction;
+
+  if (commandName === 'fith') {
+    const subcommand = options.getSubcommand();
+
+    if (subcommand === 'addgame') {
+      const gameName = options.getString('game');
+      const roleId = options.getRole('role').id;
+      const emoji = options.getString('emoji');
+
+      // Check if game already exists
+      const existingGame = gamesData.games.find(g => g.name === gameName);
+      if (existingGame) {
+        return interaction.reply({ content: `Game ${gameName} already exists.`, ephemeral: true });
+      }
+
+      gamesData.games.push({ name: gameName, roleId, emoji });
+      saveGamesData();
+
+      // Update the buttons in your embed (you'll need to implement this logic)
+
+      return interaction.reply({ content: `Game ${gameName} added successfully.`, ephemeral: true });
+    } else if (subcommand === 'removegame') {
+      const gameName = options.getString('game');
+
+      const index = gamesData.games.findIndex(g => g.name === gameName);
+      if (index === -1) {
+        return interaction.reply({ content: `Game ${gameName} not found.`, ephemeral: true });
+      }
+
+      gamesData.games.splice(index, 1);
+      saveGamesData();
+
+      // Update the buttons in your embed (you'll need to implement this logic)
+
+      return interaction.reply({ content: `Game ${gameName} removed successfully.`, ephemeral: true });
+    }
+  }
 });
 
 // Log in to Discord with your bot's token
