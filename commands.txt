@@ -1,0 +1,5 @@
+/fith sendrules = embed message (rules.js)
+/fith clear x = clears messages 
+/fith hello = test command
+/fith addGame <game> <role id> <icon>  = to add a game to the menu
+/fith removeGame Battlefield    = to remove a game from the menu
