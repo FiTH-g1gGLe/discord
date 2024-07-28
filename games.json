@@ -1,0 +1,10 @@
+{
+  "games": [
+    {
+      "name": "Apex Legends",
+      "roleId": "your_role_id_here",
+      "emoji": "🎮" // Or any other emoji
+    },
+    // ... other games
+  ]
+}
